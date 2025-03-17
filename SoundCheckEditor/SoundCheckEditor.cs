@@ -1,9 +1,12 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Web;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
+using System;
 
 public class SoundCheckEditor : EditorWindow
 {
@@ -20,6 +23,14 @@ public class SoundCheckEditor : EditorWindow
     private string apiKey;//apikey는 유저가 직접 입력할 수 있다.
     private bool needSearch = false;//검색이 필요한지 여부를 추적
 
+    //---250318_진행상태 표시기 구현
+    private bool isSearching = false;//검색 중인지 여부
+    private float progress = 0.0f;//진행 상태 (0 ~ 1)
+    private string progressMessage = "";//진행 상태 메시지
+    //---250318_오디오 미리듣기 기능 구현
+    private AudioSource audioSource;//오디오 재생을 위한 소스
+    private AudioClip currentAudioClip;//현재 재생 중인 AudioClip
+
     [MenuItem("Tools/SoundCheckEditor")]
     public static void ShowWindow()
     {
@@ -30,6 +41,13 @@ public class SoundCheckEditor : EditorWindow
     {
         apiKey = EditorPrefs.GetString("FreesoundAPIKey", "");//기본값은 빈 문자열
         EditorApplication.update += Update;//업데이트 메서드를 등록
+
+        if(audioSource == null)//오디오 소스 초기화
+        {
+            GameObject audioSourceObject = new GameObject("AudioSourceObject");
+            audioSource = audioSourceObject.AddComponent<AudioSource>();
+            audioSourceObject.hideFlags = HideFlags.HideAndDontSave;
+        }
     }
 
     private void OnDisable()
@@ -43,6 +61,10 @@ public class SoundCheckEditor : EditorWindow
         {
             needSearch = false;//검색 후 상태 리셋
             SearchSound(searchQuery);
+        }
+        if(isSearching)//진행 중일 때 마다 UI 업데이트
+        {
+            Repaint();
         }
     }
 
@@ -58,8 +80,12 @@ public class SoundCheckEditor : EditorWindow
 
         if (GUILayout.Button("Search") && !string.IsNullOrEmpty(apiKey))//Search버튼 클릭 시 + apikey 입력 시 서치사운드 호출
         {
-            //SearchSound(searchQuery);
             needSearch=true;//검색이 필요함을 표시
+        }
+        if(isSearching)//진행 표시기 표시
+        {
+            EditorGUI.ProgressBar(GUILayoutUtility.GetRect(position.width, 20.0f), progress, progressMessage);
+            Repaint();
         }
 
         if (soundResults != null && soundResults.Count > 0)// 검색 결과가 있을 때만 스크롤 뷰와 결과 목록을 표시한다.
@@ -80,7 +106,15 @@ public class SoundCheckEditor : EditorWindow
             EditorUtility.DisplayDialog("API Key Missing", "Please enter and save your API Key first.", "OK");
             return;
         }
-        string url = $"https://freesound.org/apiv2/search/text/?query={query}";
+        if(string.IsNullOrEmpty(query))
+        {
+            EditorUtility.DisplayDialog("Empty Query", "Please enter Query in blank.", "OK");
+            return;
+        }
+        string encodedQuery = HttpUtility.UrlEncode(query);// 쿼리는 URL형태로 전송되므로, 특수문자나 공백이 포함될 경우를 대비한 URL인코딩이 필요.
+                                                           // C#의 System.Web에 있는 HttpUtility.UrlEncode를 사용. 이를 통해 서버와의 통신 오류, 검색 결과 누락, 보안 문제 등 방지.
+        string url = $"https://freesound.org/apiv2/search/text/?query={encodedQuery}&filter=license:(\"Creative Commons 0\")";//저작권이 자유로운 cc0라이선스를 필터링.
+
         var request = new HttpRequestMessage(HttpMethod.Get, url);// HttpRequestMessage 객체 생성 및 인증 헤더 설정
         request.Headers.Add("Authorization", $"Token {apiKey}");
         await FetchSoundData(request); // 주어진 url로 freesound 데이터를 검색하는 메서드. 페이지 이동 시 사용
@@ -89,12 +123,23 @@ public class SoundCheckEditor : EditorWindow
     private async Task FetchSoundData(HttpRequestMessage request) //주어진 URL로 freesound 데이터를 비동기적으로 가져오는 메서드.
     {
         try
-        {
+        {   isSearching = true;//검색 시작. HTTP 요청 전후로 진행상태를 업데이트.
+            progress = 0.0f;
+            progressMessage = "Sendig Request...";
+
             HttpResponseMessage response = await client.SendAsync(request);//비동기적으로 HTTP GET 요청을 보낸 후 응답을 받는다. 생성한 URL을 사용.
+            progress = 0.5f;
+            progressMessage = "Receiving data...";
+
             if (response.IsSuccessStatusCode) // 요청이 성공했는지 확인
             {
                 string jsonResponse = await response.Content.ReadAsStringAsync();//응답의 JSON 문자열을 읽는다.
+                progress = 0.8f;
+                progressMessage = "Parsing data...";
+
                 soundResults = ParseSoundResults(jsonResponse);//JSON 문자열을 파싱하여 검색 결과 리스트를 업데이트
+                progress = 1f;
+                progressMessage = "Complete!";
             }
             else
             {
@@ -105,6 +150,12 @@ public class SoundCheckEditor : EditorWindow
         {
             Debug.LogError($"Error fetching sound data: {e.Message}");
             EditorUtility.DisplayDialog("API Request Error", $"Error fetching sound data: {e.Message}", "OK");
+        }
+        finally
+        {
+            isSearching = false; // 검색 종료
+            progress = 0f;
+            progressMessage = "";
         }
     }
 
@@ -117,34 +168,52 @@ public class SoundCheckEditor : EditorWindow
 
     private List<SoundResult> ParseSoundResults(string json)//freesound API 응답을 파싱하여 검색 결과를 반환하는 메서드
     {
-        //Debug.Log($"Received JSON: {json}");
-        var searchResults = JsonConvert.DeserializeObject<FreesoundSearchResult>(json);//JSON 문자열을 FreesoundSearchResult 객체로 변환.
-
-        if (searchResults == null || searchResults.results == null)// 검색 결과가 없거나 json 구조가 유효하지 않을 경우 출력되는 에러
+        if (string.IsNullOrEmpty(json))//api 응답 데이터 유효성 검증 --> json파싱 전에 api 응답이 empty인 경우를 방지
         {
-            Debug.LogError("No search results found or invalid JSON structure.");
-            return new List<SoundResult>();//빈 리스트를 반환토록 한다.
+            Debug.LogError("API response is empty.");
+            EditorUtility.DisplayDialog("API Error", "The API response is empty.", "OK");
+            return new List<SoundResult>();
         }
-        //다음페이지와 이전 페이지의 URL 설정
-        nextPageUrl = CleanUrl(searchResults.next);
-        prevPageUrl = CleanUrl(searchResults.previous);
-
-       // Debug.Log($"Next Page URL: {nextPageUrl}");
-       // Debug.Log($"Previous Page URL: {prevPageUrl}");
-
-        List<SoundResult> results = new List<SoundResult>();
-
-        foreach (var sound in searchResults.results)// 검색 결과 리스트를 순회하여, SoundResult 객체로 변환 후 리스트에 추가
+        try
         {
-            results.Add(new SoundResult
+            //JSON 문자열을 FreesoundSearchResult 객체로 변환.
+            var searchResults = JsonConvert.DeserializeObject<FreesoundSearchResult>(json);
+            if (searchResults == null || searchResults.results == null)// 검색 결과가 없거나 json 구조가 유효하지 않을 경우 출력되는 에러
             {
-                id = sound.id,
-                name = sound.name,
-                license = sound.license,
-                username = sound.username
-            });
+                Debug.LogError("No search results found or invalid JSON structure.");
+                return new List<SoundResult>();//빈 리스트를 반환토록 한다.
+            }
+            //다음페이지와 이전 페이지의 URL 설정
+            nextPageUrl = CleanUrl(searchResults.next);
+            prevPageUrl = CleanUrl(searchResults.previous);
+
+            List<SoundResult> results = new List<SoundResult>();
+
+            foreach (var sound in searchResults.results)// 검색 결과 리스트를 순회하여, SoundResult 객체로 변환 후 리스트에 추가
+            {
+                results.Add(new SoundResult
+                {
+                    id = sound.id,
+                    name = sound.name,
+                    license = sound.license,
+                    username = sound.username
+                });
+            }
+            return results;//변환된 검색 결과 리스트 반환
         }
-        return results;//변환된 검색 결과 리스트 반환
+        catch(JsonException ex)//JSON 파싱 데이터가 유효하지 않거나 구조가 다를 경우의 예외처리
+        {
+            Debug.LogError($"JSON Parsing Error : {ex.Message}");
+            EditorUtility.DisplayDialog("JSON Error", "Failed to parse the API response. Please Check the data format", "OK");
+            return new List<SoundResult>();// 빈 리스트를 반환.
+        }
+        catch(Exception ex)//일반 예외에 대한 처리
+        {
+            Debug.LogError($"Unexepted Error : {ex.Message}");
+            EditorUtility.DisplayDialog("Error", "An unexpected error ocurred while processing the data", "OK");
+            return new List<SoundResult>();//빈 리스트를 반환.
+        }
+
     }
 
     private void DrawSoundResults()// 검색결과를 보여주는 메서드
@@ -157,7 +226,13 @@ public class SoundCheckEditor : EditorWindow
         for (int i = 0; i < resultToDisplay; i++)
         {
             GUILayout.Label(soundResults[i].name);// 사운드 이름을 8개까지만 표시
-            if (GUILayout.Button("Play"))//play버튼 클릭 시 사운드 페이지로 이동
+
+            if(GUILayout.Button("Play Preview"))//검색 결과 UI에 미리듣기 버튼 추가
+            {
+                string previewUrl = $"https://freesound.org/apiv2/sounds/{soundResults[i].id}&fields={soundResults[i].name},previews"; //404 오류 --> 해결예정
+                PlayPreview(previewUrl);
+            }
+            if (GUILayout.Button("Open in Browser"))//버튼 클릭 시 사운드 페이지로 이동
             {
                 // Freesound의 오디오 페이지 URL 포맷: https://freesound.org/people/{username}/sounds/{id}/
                 string url = $"https://freesound.org/people/{soundResults[i].username}/sounds/{soundResults[i].id}/";
@@ -229,6 +304,49 @@ public class SoundCheckEditor : EditorWindow
         }
         Debug.LogError(errorMessage);
         EditorUtility.DisplayDialog("API Error", errorMessage, "OK");
+    }
+
+    private async void PlayPreview(string previewUrl)//목록에 출력된 사운드 리소스의 미리듣기 기능을 구현하는 메서드.
+    {
+        if(string.IsNullOrEmpty(previewUrl))//미리듣기 url이 null이거나 비어있을 경우
+        {
+            Debug.LogError(("Preview URL is empty."));
+            return;
+        }
+        try
+        {
+            using(UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(previewUrl, audioType:AudioType.MPEG))
+            {
+                var operation = www.SendWebRequest();
+                while(!operation.isDone)
+                {
+                    await Task.Yield();//비동기 대기.
+                }
+                if(www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    Debug.LogError($"Error loading audio : {www.error}");
+                    EditorUtility.DisplayDialog("Audio Error", $"Failed to load audio : {www.error}", "OK");
+                }
+                else
+                {
+                    currentAudioClip = DownloadHandlerAudioClip.GetContent(www);
+                    if(currentAudioClip != null)
+                    {
+                        if(audioSource.isPlaying)//현재 재생중이면 스톱.
+                        {
+                            audioSource.Stop();
+                        }
+                        audioSource.clip = currentAudioClip;
+                        audioSource.Play();
+                    }
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            Debug.LogError($"Error playing preview : {ex.Message}");
+            EditorUtility.DisplayDialog("Error", $"Failed to play preview : {ex.Message}", "OK");
+        }
     }
  }
 
