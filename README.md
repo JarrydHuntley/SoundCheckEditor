@@ -18,15 +18,17 @@ https://drive.google.com/file/d/1xsj0oZcVPhaVOSS5q0K3vdYVISoBdDy3/view?usp=drive
 - Newtonesoft Json : json데이터 처리를 위해 사용
 
 # 개요
-1. 게임에는 많은 사운드가 필요한데, 작업할 때 마다 필요한 사운드를 찾는 과정이 너무 번거로웠다. AssetStore처럼 음원 사이트도 에디터 내에서 접근할 수 있으면 편리성이 증가할 것이라 판단하여 사운드 체크 기능을 구현하였다.
-2. 에디터 내에서 검색, 미리듣기가 가능하고, 다운로드 가능한 브라우저 창을 열 수 있다.
+1. 필요한 사운드 탐색을 위해 사이트를 이리저리 돌아다니지 않고, 에디터 내에서 바로 접근할 수 있는 기능을 만들고자 하였다.
+2. 외부 API 및 HTTP통신을 Unity에서 사용하는 좋은 경험이 될 것이라 판단했고, 실제로 좋은 공부가 되었다.
 
 # 사용 시 유의
-- Json 데이터 처리를 위해 Newtonsoft json 3.2.1버전을 임포트(패키지 매니저 이름으로 찾기에서 com.unity.nuget.newtonsoft-json 입력 후 3.2.1버전 다운로드) 
-- 오류가 발생하는 경우, asset폴더 내 plugin 폴더에 직접 Newtonsoft.json dll파일을 넣어주면 해결
+- JSON 데이터 처리를 위해 Newtonsoft json 3.2.1 라이브러리가 사용되었음. 사용자는 별도의 다운로드가 필요 없도록 DLL과 Assembly Definition을 패키지에 포함시켜 놓았지만, 혹시 오류가 발생할 경우 아래와 같이 조치 바람.
+  
+  1. Json 데이터 처리를 위해 Newtonsoft json 3.2.1버전을 임포트(패키지 매니저 이름으로 찾기에서 com.unity.nuget.newtonsoft-json 입력 후 3.2.1버전 다운로드) 
+  2. Assets폴더 내 Plugin 폴더에 직접 Newtonsoft.json dll파일을 넣어주면 해결
 
 # 기능
-1. 원하는 사운드를 검색한다. 입력한 쿼리는 Freesound 사이트로 요청되고, 검색 결과가 에디터 창에 출력된다. 원하는 사운드의 **Open in Browser**버튼을 클릭하면 Freesound의 해당 사운드 페이지로 연결된다.
+1. 원하는 사운드를 검색 후 **Open in Browser**버튼을 클릭하면 Freesound의 해당 사운드 페이지로 연결된다.
 2. 사용자 본인의 Freesound API키를 에디터 상에 입력하여 사용할 수 있다.
 3. **Play Preview** 버튼을 클릭하여 사운드 미리듣기가 가능하며, 사운드 재생 중일 경우 자동으로 **Stop Preview** 버튼이 아래에 나타난다.
 
@@ -72,20 +74,20 @@ https://drive.google.com/file/d/1xsj0oZcVPhaVOSS5q0K3vdYVISoBdDy3/view?usp=drive
 
 # 업데이트 노트
 - Ver.1
-    1. Freesound API를 사용해 에디터 상에서 음향효과 목록을 검색하고 접근할 수 있는 기능 설계
+1. Freesound API를 사용해 에디터 상에서 음향효과 목록을 검색하고 접근할 수 있는 기능 설계
 
 - Ver.2
-    1. 매 프레임 호출되는 OnGUI의 비용 절감을 위해 EditorApplication.update를 이용해 상태기반 이벤트 처리 수행
-    2. 페이지 넘기기 기능 추가 : Freesound의 next, previous응답을 사용하고, API 요청 시 Authorization 헤더를 포함하여 요청을 보냄. 
-    3. 페이지 넘기기 UI 조절 : next page, previous page 버튼이 SoundResults에 가려 안보이게 됨을 방지하기 위해 빈 공간을 나누고 DisabledGroup으로 묶음. 
-    4. next, prev URL의 불필요한 부분 제거 
-    5. API Key 은닉 및 사용자친화적 입력 : 패키지 배포를 위해 APIKey를 숨기고, 사용자가 에디터 설정창을 통해 직접 본인의 APIKey를 입력받을 수 있도록 함
+1. 매 프레임 호출되는 OnGUI의 비용 절감을 위해 EditorApplication.update를 이용해 상태기반 이벤트 처리 수행
+2. 페이지 넘기기 기능 추가 : Freesound의 next, previous응답을 사용하고, API 요청 시 Authorization 헤더를 포함하여 요청을 보냄. 
+3. 페이지 넘기기 UI 조절 : next page, previous page 버튼이 SoundResults에 가려 안보이게 됨을 방지하기 위해 빈 공간을 나누고 DisabledGroup으로 묶음. 
+4. next, prev URL의 불필요한 부분 제거 
+5. API Key 은닉 및 사용자친화적 입력 : 패키지 배포를 위해 APIKey를 숨기고, 사용자가 에디터 설정창을 통해 직접 본인의 APIKey를 입력받을 수 있도록 함
 
-  - Ver.3
-    1. Query에 라이선스 필터링 추가
-    2. URL의 공백 및 특수문자 입력 시 오류 방지를 위한 URL인코딩 추가
-    3. JSON 파싱 예외처리 추가
-    4. 검색 시 진행 표시기 구현
-    5. 사운드 미리듣기 기능 구현
-    6. 에디터 내 한글 설명 제거 및 API KEY 발급 필요 문구 추가
-    7. API KEY, URL 유효성 체크 추가
+- Ver.3
+1. Query에 라이선스 필터링 추가
+2. URL의 공백 및 특수문자 입력 시 오류 방지를 위한 URL인코딩 추가
+3. JSON 파싱 예외처리 추가
+4. 검색 시 진행 표시기 구현
+5. 사운드 미리듣기 기능 구현
+6. 에디터 내 한글 설명 제거 및 API KEY 발급 필요 문구 추가
+7. API KEY, URL 유효성 체크 추가
