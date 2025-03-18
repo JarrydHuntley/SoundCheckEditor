@@ -1,5 +1,5 @@
 # SoundCheckEditor
-- Unity에서 직접 검색하고, Freesound를 통해 무료 사운드를 탐색할 수 있는 커스텀 에디터
+- **Unity에서 직접 검색하고, Freesound를 통해 무료 사운드를 탐색할 수 있는 커스텀 에디터**
 - Freesound : 저작권 무료 음원사이트. (https://freesound.org/)
 - API 문서는 http://www.freesound.org/docs/api/ 에서 찾을 수 있음.
 - API 키는 https://www.freesound.org/apiv2/apply/ 에서 신청 가능 .
@@ -14,8 +14,8 @@ https://drive.google.com/file/d/1xsj0oZcVPhaVOSS5q0K3vdYVISoBdDy3/view?usp=drive
 
 # 기술 스택
 - Unity Editor의 커스텀 에디터 기능
-- Freesound APIv2 : Freesound의 api키를 발급받아 사용
-- Newtonesoft Json : json데이터 처리를 위해 사용
+- Freesound APIv2 : Freesound의 API Key를 발급받아 사용
+- NewtoneSoft Json : JSON 데이터 처리를 위해 사용
 
 # 개요
 1. 필요한 사운드 탐색을 위해 사이트를 이리저리 돌아다니지 않고, 에디터 내에서 바로 접근할 수 있는 기능을 만들고자 하였다.
