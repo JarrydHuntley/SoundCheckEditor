@@ -48,7 +48,7 @@ https://drive.google.com/file/d/1xsj0oZcVPhaVOSS5q0K3vdYVISoBdDy3/view?usp=drive
  ![Image](https://github.com/user-attachments/assets/848435d7-bffe-448a-b5a5-21e82fefbfe8)
 
  ## Play Preview 클릭 시 에디터 내에서 바로 사운드가 재생됨.
- ![Image](https://github.com/user-attachments/assets/830e934f-0848-4e5b-9fda-daf558bf04df)
+ ![Image](https://github.com/user-attachments/assets/d733a2d3-ba8a-4b54-8c56-74d68400f211)
 
  ## Open in Browser 클릭 시 Freesound의 해당 음향효과 검색 결과창으로 이동
  ![사이트연결2](https://github.com/user-attachments/assets/e027c82e-bb06-4384-a036-1ac89f44fdc1)
