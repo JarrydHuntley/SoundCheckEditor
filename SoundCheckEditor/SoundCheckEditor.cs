@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using System;
+using UnityEngine.UIElements;
 
 public class SoundCheckEditor : EditorWindow
 {
@@ -70,9 +71,17 @@ public class SoundCheckEditor : EditorWindow
 
     private void OnGUI()
     {
+        GUIStyle firstCenteredLabel = new GUIStyle(EditorStyles.boldLabel);//가운데 정렬용 GUI스타일 
+        firstCenteredLabel.alignment = TextAnchor.MiddleCenter;
+        firstCenteredLabel.fontSize = 15;
+
+        GUIStyle centeredLabel = new GUIStyle(EditorStyles.boldLabel);//가운데 정렬용 GUI스타일 
+        centeredLabel.alignment = TextAnchor.MiddleCenter;
+
         // GUI 그리기
-        GUILayout.Label("Search for Sound Effect You Want(원하는 사운드 이펙트를 검색하세요)\n", EditorStyles.boldLabel);
-        GUILayout.Label("This system uses the API from https://freesound.org/.(이 시스템은 https://freesound.org/의 API를 사용합니다.)\n", EditorStyles.whiteLabel);
+        GUILayout.Label("Search for Sound Effect You Want\n", firstCenteredLabel);
+        GUILayout.Label("■ This system uses the API from https://freesound.org ■\n", centeredLabel);
+        GUILayout.Label("■ To use this tool, You need to get the API Key of freesounds issued. ■\n", centeredLabel);
 
         DrawApiKeyField();//api키 입력 및 저장 ui
         
@@ -80,6 +89,7 @@ public class SoundCheckEditor : EditorWindow
 
         if (GUILayout.Button("Search") && !string.IsNullOrEmpty(apiKey))//Search버튼 클릭 시 + apikey 입력 시 서치사운드 호출
         {
+            
             needSearch=true;//검색이 필요함을 표시
         }
         if(isSearching)//진행 표시기 표시
@@ -97,15 +107,39 @@ public class SoundCheckEditor : EditorWindow
         {
             GUILayout.Label("No Results Found.");
         }
+
+        DrawStopPreviewButton();
+    }
+
+    private void DrawStopPreviewButton()// 미리듣기 중지 버튼을 그리는 메서드.
+    {
+        if(audioSource.isPlaying)
+        {
+            GUIStyle stopButtonStyle = new GUIStyle(GUI.skin.button);
+            stopButtonStyle.normal.textColor = Color.green;
+            stopButtonStyle.fontStyle = FontStyle.Bold;
+            
+            if(GUILayout.Button("Stop Preview", stopButtonStyle))
+            {
+                StopPreview();
+            }
+        }
+    }
+
+    private void StopPreview()//미리듣기 중지기능
+    {
+        if(audioSource.isPlaying)
+        {
+            audioSource.Stop();//오디오 중지
+            audioSource.clip = null;//현재 클립 초기화
+            currentAudioClip = null;//현재 오디오 클립 초기화
+            EditorUtility.DisplayDialog("Preview Stopped", "The preview has been stopped.", "OK");
+        }
     }
 
     private async void SearchSound(string query)// Freesound의 api키와 검색 쿼리를 사용하여 api요청을 보내 사운드를 검색. 입력한 데이터에 따라 동적으로 URL 생성,호출
     {
-        if (string.IsNullOrEmpty(apiKey))//오류처리
-        {
-            EditorUtility.DisplayDialog("API Key Missing", "Please enter and save your API Key first.", "OK");
-            return;
-        }
+        CheckApiKeyVaildation();
         if(string.IsNullOrEmpty(query))
         {
             EditorUtility.DisplayDialog("Empty Query", "Please enter Query in blank.", "OK");
@@ -113,7 +147,8 @@ public class SoundCheckEditor : EditorWindow
         }
         string encodedQuery = HttpUtility.UrlEncode(query);// 쿼리는 URL형태로 전송되므로, 특수문자나 공백이 포함될 경우를 대비한 URL인코딩이 필요.
                                                            // C#의 System.Web에 있는 HttpUtility.UrlEncode를 사용. 이를 통해 서버와의 통신 오류, 검색 결과 누락, 보안 문제 등 방지.
-        string url = $"https://freesound.org/apiv2/search/text/?query={encodedQuery}&filter=license:(\"Creative Commons 0\")";//저작권이 자유로운 cc0라이선스를 필터링.
+                                                           //저작권이 자유로운 cc0라이선스를 필터링, api응답에 프리뷰 url을 포함하여 요청하기 위해 프리뷰 파라미터 추가
+        string url =  $"https://freesound.org/apiv2/search/text/?query={encodedQuery}&filter=license:(\"Creative Commons 0\")&fields=id,name,previews,username";
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);// HttpRequestMessage 객체 생성 및 인증 헤더 설정
         request.Headers.Add("Authorization", $"Token {apiKey}");
@@ -178,7 +213,7 @@ public class SoundCheckEditor : EditorWindow
         {
             //JSON 문자열을 FreesoundSearchResult 객체로 변환.
             var searchResults = JsonConvert.DeserializeObject<FreesoundSearchResult>(json);
-            if (searchResults == null || searchResults.results == null)// 검색 결과가 없거나 json 구조가 유효하지 않을 경우 출력되는 에러
+            if (searchResults == null || searchResults.results == null || searchResults?.results == null)// 검색 결과가 없거나 json 구조가 유효하지 않을 경우 출력되는 에러
             {
                 Debug.LogError("No search results found or invalid JSON structure.");
                 return new List<SoundResult>();//빈 리스트를 반환토록 한다.
@@ -196,7 +231,8 @@ public class SoundCheckEditor : EditorWindow
                     id = sound.id,
                     name = sound.name,
                     license = sound.license,
-                    username = sound.username
+                    username = sound.username,
+                    previews = sound.previews
                 });
             }
             return results;//변환된 검색 결과 리스트 반환
@@ -225,17 +261,26 @@ public class SoundCheckEditor : EditorWindow
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width), GUILayout.Height(300));
         for (int i = 0; i < resultToDisplay; i++)
         {
+            GUILayout.Space(20);
             GUILayout.Label(soundResults[i].name);// 사운드 이름을 8개까지만 표시
 
             if(GUILayout.Button("Play Preview"))//검색 결과 UI에 미리듣기 버튼 추가
             {
-                string previewUrl = $"https://freesound.org/apiv2/sounds/{soundResults[i].id}&fields={soundResults[i].name},previews"; //404 오류 --> 해결예정
-                PlayPreview(previewUrl);
+                if (soundResults[i].previews != null)
+                {
+                    string previewUrl = soundResults[i].previews.preview_hq_mp3; // 고품질 MP3 사용
+                    PlayPreview(previewUrl);
+                }
+                else
+                {
+                    Debug.LogError("No preview URL found.");
+                    EditorUtility.DisplayDialog("Preview Error", "No preview URL found for this sound.", "OK");
+                }
             }
             if (GUILayout.Button("Open in Browser"))//버튼 클릭 시 사운드 페이지로 이동
             {
                 // Freesound의 오디오 페이지 URL 포맷: https://freesound.org/people/{username}/sounds/{id}/
-                string url = $"https://freesound.org/people/{soundResults[i].username}/sounds/{soundResults[i].id}/";
+                 string url = $"https://freesound.org/people/{soundResults[i].username}/sounds/{soundResults[i].id}/";
                 Application.OpenURL(url);//url을 웹 브라우저에서 열 수 있음.
             }
         }
@@ -308,20 +353,24 @@ public class SoundCheckEditor : EditorWindow
 
     private async void PlayPreview(string previewUrl)//목록에 출력된 사운드 리소스의 미리듣기 기능을 구현하는 메서드.
     {
-        if(string.IsNullOrEmpty(previewUrl))//미리듣기 url이 null이거나 비어있을 경우
-        {
-            Debug.LogError(("Preview URL is empty."));
-            return;
-        }
+        CheckApiKeyVaildation();
+        CheckUrlValidation(previewUrl);
         try
         {
+            if(audioSource.isPlaying)//재생 전에 현재 오디오 중지.
+            {
+                StopPreview();
+            }
             using(UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(previewUrl, audioType:AudioType.MPEG))
             {
+                www.SetRequestHeader("Authorization", $"Token {apiKey}");//api키를 헤더에 추가. freesound는 미리듣기도 apikey를 요구하므로.
+
                 var operation = www.SendWebRequest();
                 while(!operation.isDone)
                 {
                     await Task.Yield();//비동기 대기.
                 }
+
                 if(www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
                 {
                     Debug.LogError($"Error loading audio : {www.error}");
@@ -330,6 +379,7 @@ public class SoundCheckEditor : EditorWindow
                 else
                 {
                     currentAudioClip = DownloadHandlerAudioClip.GetContent(www);
+
                     if(currentAudioClip != null)
                     {
                         if(audioSource.isPlaying)//현재 재생중이면 스톱.
@@ -346,6 +396,23 @@ public class SoundCheckEditor : EditorWindow
         {
             Debug.LogError($"Error playing preview : {ex.Message}");
             EditorUtility.DisplayDialog("Error", $"Failed to play preview : {ex.Message}", "OK");
+        }
+    }
+
+    private void CheckApiKeyVaildation()//API 키 유효성 검사 메서드.
+    {
+        if(string.IsNullOrEmpty(apiKey))
+        {
+            EditorUtility.DisplayDialog("API Key Missing", "Please enter and save your API Key first.", "OK");
+            return;
+        }
+    }
+    private void CheckUrlValidation(string url)//url 유효성 검사 메서드.
+    {
+        if(string.IsNullOrEmpty(url))//url이 null이거나 비어있을 경우
+        {
+            Debug.LogError($"{url} is empty.");
+            return;
         }
     }
  }
