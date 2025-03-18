@@ -5,7 +5,7 @@
 - API 키는 https://www.freesound.org/apiv2/apply/ 에서 신청 가능 .
 
 # 패키지 다운로드 링크
-https://drive.google.com/file/d/1xsj0oZcVPhaVOSS5q0K3vdYVISoBdDy3/view?usp=drive_link
+
 
 # 개발 환경 
 - Unity Engine 2023.2.16f1
@@ -70,7 +70,7 @@ https://drive.google.com/file/d/1xsj0oZcVPhaVOSS5q0K3vdYVISoBdDy3/view?usp=drive
 # 버전목록
 - 2024.09.04 Ver.1 : https://drive.google.com/file/d/1F8qJMUQgJxh399z4ZgxFmvdOQGWK41ek/view?usp=drive_link
 - 2024.09.05 Ver.2 : https://drive.google.com/file/d/1uJ7y2Jo4k8gwpsVRGpM7rKm6KBX5jjCj/view?usp=sharing
-- 2025.03.18 Ver.3 : https://drive.google.com/file/d/1xsj0oZcVPhaVOSS5q0K3vdYVISoBdDy3/view?usp=drive_link
+- 2025.03.18 Ver.3 : 
 
 # 업데이트 노트
 - Ver.1
