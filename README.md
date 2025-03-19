@@ -5,7 +5,11 @@
 - API 키는 https://www.freesound.org/apiv2/apply/ 에서 신청 가능 .
 
 # 패키지 다운로드 링크
+2025.03 AssetStore 출시 예정
 
+# 사용자 지원문서 (User Support Document)
+[KOR](/SoundCheckEditor/README_ENG.pdf)
+[ENG](/SoundCheckEditor/README_ENG.pdf)
 
 # 개발 환경 
 - Unity Engine 2023.2.16f1
@@ -68,9 +72,9 @@
  5. Previews : 미리듣기 사운드의 품질 필드 클래스. 
 
 # 버전목록
-- 2024.09.04 Ver.1 : https://drive.google.com/file/d/1F8qJMUQgJxh399z4ZgxFmvdOQGWK41ek/view?usp=drive_link
-- 2024.09.05 Ver.2 : https://drive.google.com/file/d/1uJ7y2Jo4k8gwpsVRGpM7rKm6KBX5jjCj/view?usp=sharing
-- 2025.03.18 Ver.3 : 
+- 2024.09.04 Ver.1 
+- 2024.09.05 Ver.2 
+- 2025.03.18 Ver.3 : 2025.03 AssetStore 출시 예정
 
 # 업데이트 노트
 - Ver.1
