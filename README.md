@@ -8,7 +8,7 @@
 2025.03 AssetStore 출시 예정
 
 # 사용자 지원문서 (User Support Document)
-- [KOR](/SoundCheckEditor/README_ENG.pdf)
+- [KOR](/SoundCheckEditor/README_KOR.pdf)
 - [ENG](/SoundCheckEditor/README_ENG.pdf)
 
 # 개발 환경 
