@@ -5,7 +5,7 @@
 - API 키는 https://www.freesound.org/apiv2/apply/ 에서 신청 가능 .
 
 # 패키지 다운로드 링크
-2025.03 AssetStore 출시 예정
+https://assetstore.unity.com/packages/tools/audio/soundcheckeditor-314439
 
 # 사용자 지원문서 (User Support Document)
 - [KOR](/SoundCheckEditor/README_KOR.pdf)
@@ -74,7 +74,7 @@
 # 버전목록
 - 2024.09.04 Ver.1 
 - 2024.09.05 Ver.2 
-- 2025.03.18 Ver.3 : 2025.03 AssetStore 출시 예정
+- 2025.03.18 Ver.3 : 2025.03 AssetStore 출시
 
 # 업데이트 노트
 - Ver.1
