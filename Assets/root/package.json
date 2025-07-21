@@ -1,0 +1,19 @@
+{
+    "name": "com.github.shin0624.soundcheckeditor",
+    "displayName": "Sound Check Editor",
+    "author": {
+        "name": "shin0624",
+        "url": "https://github.com/shin0624"
+    },
+    "keywords": [
+        "sound",
+        "freesound",
+        "sound preview",
+        "audio",
+        "sfx"
+    ],
+    "version": "3.1.0",
+    "unity": "2022.3.0",
+    "description": "SoundCheckEditor is a tool that allows you to search and preview sound effects using the Freesound.org",
+    "dependencies": {}
+}
