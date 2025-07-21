@@ -1,9 +1,12 @@
 {
     "name": "Package.Editor",
+    "rootNamespace": "",
     "references": [
         "Package.Runtime"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

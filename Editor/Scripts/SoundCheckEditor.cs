@@ -8,29 +8,30 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System;
 using UnityEngine.UIElements;
+using Codice.Utils;
 
 public class SoundCheckEditor : EditorWindow
 {
-    // SoundCheckEditor : FreeSoundÀÇ API Key¸¦ »ç¿ëÇÏ¿©, À¯´ÏÆ¼ ¿¡µðÅÍ ³»¿¡¼­ Freesound¿¡ Á¸ÀçÇÏ´Â License FreeÀÇ »ç¿îµå¸¦ °Ë»öÇÏ°í playÇØº¼ ¼ö ÀÖ´Â ±â´É
+    // SoundCheckEditor : FreeSoundï¿½ï¿½ API Keyï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½, ï¿½ï¿½ï¿½ï¿½Æ¼ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Freesoundï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ License Freeï¿½ï¿½ ï¿½ï¿½ï¿½å¸¦ ï¿½Ë»ï¿½ï¿½Ï°ï¿½ playï¿½Øºï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½
 
-    private string searchQuery = ""; // °Ë»ö¾î ÀÔ·Â ÇÊµå
-    private List<SoundResult> soundResults = new List<SoundResult>(); // °Ë»ö °á°ú ¸®½ºÆ®
-    private static readonly HttpClient client = new HttpClient(); // HttpClient ½Ì±ÛÅÏ »ç¿ë. HttpClient´Â ÀÎ½ºÅÏ½ºÈ­ÇÏ´Â ºñ¿ëÀÌ ºñ±³Àû Å©±â ¶§¹®¿¡, °¡´ÉÇÑ ÇÑ Àç»ç¿ëÇÏ´Â °ÍÀÌ ÁÁÀ½
-    private Vector2 scrollPosition;//½ºÅ©·Ñ À§Ä¡ 
+    private string searchQuery = ""; // ï¿½Ë»ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ ï¿½Êµï¿½
+    private List<SoundResult> soundResults = new List<SoundResult>(); // ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®
+    private static readonly HttpClient client = new HttpClient(); // HttpClient ï¿½Ì±ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½. HttpClientï¿½ï¿½ ï¿½Î½ï¿½ï¿½Ï½ï¿½È­ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    private Vector2 scrollPosition;//ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½Ä¡ 
 
-    private string nextPageUrl = null;//´ÙÀ½ ÆäÀÌÁö url ÀúÀå
-    private string prevPageUrl = null;//ÀÌÀü ÆäÀÌÁö url ÀúÀå
+    private string nextPageUrl = null;//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ url ï¿½ï¿½ï¿½ï¿½
+    private string prevPageUrl = null;//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ url ï¿½ï¿½ï¿½ï¿½
 
-    private string apiKey;//apikey´Â À¯Àú°¡ Á÷Á¢ ÀÔ·ÂÇÒ ¼ö ÀÖ´Ù.
-    private bool needSearch = false;//°Ë»öÀÌ ÇÊ¿äÇÑÁö ¿©ºÎ¸¦ ÃßÀû
+    private string apiKey;//apikeyï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½.
+    private bool needSearch = false;//ï¿½Ë»ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    //---250318_ÁøÇà»óÅÂ Ç¥½Ã±â ±¸Çö
-    private bool isSearching = false;//°Ë»ö ÁßÀÎÁö ¿©ºÎ
-    private float progress = 0.0f;//ÁøÇà »óÅÂ (0 ~ 1)
-    private string progressMessage = "";//ÁøÇà »óÅÂ ¸Þ½ÃÁö
-    //---250318_¿Àµð¿À ¹Ì¸®µè±â ±â´É ±¸Çö
-    private AudioSource audioSource;//¿Àµð¿À Àç»ýÀ» À§ÇÑ ¼Ò½º
-    private AudioClip currentAudioClip;//ÇöÀç Àç»ý ÁßÀÎ AudioClip
+    //---250318_ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½Ã±ï¿½ ï¿½ï¿½ï¿½ï¿½
+    private bool isSearching = false;//ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    private float progress = 0.0f;//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (0 ~ 1)
+    private string progressMessage = "";//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½
+    //---250318_ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    private AudioSource audioSource;//ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½
+    private AudioClip currentAudioClip;//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ AudioClip
 
     [MenuItem("Tools/SoundCheckEditor")]
     public static void ShowWindow()
@@ -38,12 +39,12 @@ public class SoundCheckEditor : EditorWindow
         GetWindow<SoundCheckEditor>("Sound Check Editor");
     }
 
-    private void OnEnable()// ¿¡µðÅÍÃ¢ÀÌ È°¼ºÈ­µÇ¸é EditorPrefs¿¡¼­ ÀúÀåµÈ apikey¸¦ ºÒ·¯¿Â´Ù.
+    private void OnEnable()// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¢ï¿½ï¿½ È°ï¿½ï¿½È­ï¿½Ç¸ï¿½ EditorPrefsï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ apikeyï¿½ï¿½ ï¿½Ò·ï¿½ï¿½Â´ï¿½.
     {
-        apiKey = EditorPrefs.GetString("FreesoundAPIKey", "");//±âº»°ªÀº ºó ¹®ÀÚ¿­
-        EditorApplication.update += Update;//¾÷µ¥ÀÌÆ® ¸Þ¼­µå¸¦ µî·Ï
+        apiKey = EditorPrefs.GetString("FreesoundAPIKey", "");//ï¿½âº»ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¿ï¿½
+        EditorApplication.update += Update;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Þ¼ï¿½ï¿½å¸¦ ï¿½ï¿½ï¿½
 
-        if(audioSource == null)//¿Àµð¿À ¼Ò½º ÃÊ±âÈ­
+        if(audioSource == null)//ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½Ê±ï¿½È­
         {
             GameObject audioSourceObject = new GameObject("AudioSourceObject");
             audioSource = audioSourceObject.AddComponent<AudioSource>();
@@ -53,17 +54,17 @@ public class SoundCheckEditor : EditorWindow
 
     private void OnDisable()
     {
-        EditorApplication.update-=Update;//¾÷µ¥ÀÌÆ® ¸Þ¼­µå ÇØÁ¦
+        EditorApplication.update-=Update;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Þ¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
 
     private void Update()
     {
-        if(needSearch)// °Ë»ö ¿äÃ» Ã³¸®
+        if(needSearch)// ï¿½Ë»ï¿½ ï¿½ï¿½Ã» Ã³ï¿½ï¿½
         {
-            needSearch = false;//°Ë»ö ÈÄ »óÅÂ ¸®¼Â
+            needSearch = false;//ï¿½Ë»ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             SearchSound(searchQuery);
         }
-        if(isSearching)//ÁøÇà ÁßÀÏ ¶§ ¸¶´Ù UI ¾÷µ¥ÀÌÆ®
+        if(isSearching)//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
         {
             Repaint();
         }
@@ -71,39 +72,39 @@ public class SoundCheckEditor : EditorWindow
 
     private void OnGUI()
     {
-        GUIStyle firstCenteredLabel = new GUIStyle(EditorStyles.boldLabel);//°¡¿îµ¥ Á¤·Ä¿ë GUI½ºÅ¸ÀÏ 
+        GUIStyle firstCenteredLabel = new GUIStyle(EditorStyles.boldLabel);//ï¿½ï¿½ï¿½îµ¥ ï¿½ï¿½ï¿½Ä¿ï¿½ GUIï¿½ï¿½Å¸ï¿½ï¿½ 
         firstCenteredLabel.alignment = TextAnchor.MiddleCenter;
         firstCenteredLabel.fontSize = 15;
 
-        GUIStyle centeredLabel = new GUIStyle(EditorStyles.boldLabel);//°¡¿îµ¥ Á¤·Ä¿ë GUI½ºÅ¸ÀÏ 
+        GUIStyle centeredLabel = new GUIStyle(EditorStyles.boldLabel);//ï¿½ï¿½ï¿½îµ¥ ï¿½ï¿½ï¿½Ä¿ï¿½ GUIï¿½ï¿½Å¸ï¿½ï¿½ 
         centeredLabel.alignment = TextAnchor.MiddleCenter;
 
-        // GUI ±×¸®±â
+        // GUI ï¿½×¸ï¿½ï¿½ï¿½
         GUILayout.Label("Search for Sound Effect You Want\n", firstCenteredLabel);
-        GUILayout.Label("¡á This system uses the API from https://freesound.org ¡á\n", centeredLabel);
-        GUILayout.Label("¡á To use this tool, You need to get the API Key of freesounds issued. ¡á\n", centeredLabel);
+        GUILayout.Label("ï¿½ï¿½ This system uses the API from https://freesound.org ï¿½ï¿½\n", centeredLabel);
+        GUILayout.Label("ï¿½ï¿½ To use this tool, You need to get the API Key of freesounds issued. ï¿½ï¿½\n", centeredLabel);
 
-        DrawApiKeyField();//apiÅ° ÀÔ·Â ¹× ÀúÀå ui
+        DrawApiKeyField();//apiÅ° ï¿½Ô·ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ui
         
-        searchQuery = EditorGUILayout.TextField("Search Sound Effect", searchQuery);// °Ë»ö¾î ÀÔ·Â
+        searchQuery = EditorGUILayout.TextField("Search Sound Effect", searchQuery);// ï¿½Ë»ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½
 
-        if (GUILayout.Button("Search") && !string.IsNullOrEmpty(apiKey))//Search¹öÆ° Å¬¸¯ ½Ã + apikey ÀÔ·Â ½Ã ¼­Ä¡»ç¿îµå È£Ãâ
+        if (GUILayout.Button("Search") && !string.IsNullOrEmpty(apiKey))//Searchï¿½ï¿½Æ° Å¬ï¿½ï¿½ ï¿½ï¿½ + apikey ï¿½Ô·ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½
         {
             
-            needSearch=true;//°Ë»öÀÌ ÇÊ¿äÇÔÀ» Ç¥½Ã
+            needSearch=true;//ï¿½Ë»ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½
         }
-        if(isSearching)//ÁøÇà Ç¥½Ã±â Ç¥½Ã
+        if(isSearching)//ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½Ã±ï¿½ Ç¥ï¿½ï¿½
         {
             EditorGUI.ProgressBar(GUILayoutUtility.GetRect(position.width, 20.0f), progress, progressMessage);
             Repaint();
         }
 
-        if (soundResults != null && soundResults.Count > 0)// °Ë»ö °á°ú°¡ ÀÖÀ» ¶§¸¸ ½ºÅ©·Ñ ºä¿Í °á°ú ¸ñ·ÏÀ» Ç¥½ÃÇÑ´Ù.
+        if (soundResults != null && soundResults.Count > 0)// ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½ï¿½Ñ´ï¿½.
         {
             DrawSoundResults();
             DrawPaginationButtons();
         }
-        else if(!needSearch)//°Ë»öÀ» ÇÏÁö ¾Ê¾ÒÀ» ¶§
+        else if(!needSearch)//ï¿½Ë»ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾ï¿½ï¿½ï¿½ ï¿½ï¿½
         {
             GUILayout.Label("No Results Found.");
         }
@@ -111,7 +112,7 @@ public class SoundCheckEditor : EditorWindow
         DrawStopPreviewButton();
     }
 
-    private void DrawStopPreviewButton()// ¹Ì¸®µè±â ÁßÁö ¹öÆ°À» ±×¸®´Â ¸Þ¼­µå.
+    private void DrawStopPreviewButton()// ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ°ï¿½ï¿½ ï¿½×¸ï¿½ï¿½ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½.
     {
         if(audioSource.isPlaying)
         {
@@ -126,18 +127,18 @@ public class SoundCheckEditor : EditorWindow
         }
     }
 
-    private void StopPreview()//¹Ì¸®µè±â ÁßÁö±â´É
+    private void StopPreview()//ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     {
         if(audioSource.isPlaying)
         {
-            audioSource.Stop();//¿Àµð¿À ÁßÁö
-            audioSource.clip = null;//ÇöÀç Å¬¸³ ÃÊ±âÈ­
-            currentAudioClip = null;//ÇöÀç ¿Àµð¿À Å¬¸³ ÃÊ±âÈ­
+            audioSource.Stop();//ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            audioSource.clip = null;//ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ ï¿½Ê±ï¿½È­
+            currentAudioClip = null;//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ ï¿½Ê±ï¿½È­
             EditorUtility.DisplayDialog("Preview Stopped", "The preview has been stopped.", "OK");
         }
     }
 
-    private async void SearchSound(string query)// FreesoundÀÇ apiÅ°¿Í °Ë»ö Äõ¸®¸¦ »ç¿ëÇÏ¿© api¿äÃ»À» º¸³» »ç¿îµå¸¦ °Ë»ö. ÀÔ·ÂÇÑ µ¥ÀÌÅÍ¿¡ µû¶ó µ¿ÀûÀ¸·Î URL »ý¼º,È£Ãâ
+    private async void SearchSound(string query)// Freesoundï¿½ï¿½ apiÅ°ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ apiï¿½ï¿½Ã»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½å¸¦ ï¿½Ë»ï¿½. ï¿½Ô·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ URL ï¿½ï¿½ï¿½ï¿½,È£ï¿½ï¿½
     {
         CheckApiKeyVaildation();
         if(string.IsNullOrEmpty(query))
@@ -145,34 +146,34 @@ public class SoundCheckEditor : EditorWindow
             EditorUtility.DisplayDialog("Empty Query", "Please enter Query in blank.", "OK");
             return;
         }
-        string encodedQuery = HttpUtility.UrlEncode(query);// Äõ¸®´Â URLÇüÅÂ·Î Àü¼ÛµÇ¹Ç·Î, Æ¯¼ö¹®ÀÚ³ª °ø¹éÀÌ Æ÷ÇÔµÉ °æ¿ì¸¦ ´ëºñÇÑ URLÀÎÄÚµùÀÌ ÇÊ¿ä.
-                                                           // C#ÀÇ System.Web¿¡ ÀÖ´Â HttpUtility.UrlEncode¸¦ »ç¿ë. ÀÌ¸¦ ÅëÇØ ¼­¹ö¿ÍÀÇ Åë½Å ¿À·ù, °Ë»ö °á°ú ´©¶ô, º¸¾È ¹®Á¦ µî ¹æÁö.
-                                                           //ÀúÀÛ±ÇÀÌ ÀÚÀ¯·Î¿î cc0¶óÀÌ¼±½º¸¦ ÇÊÅÍ¸µ, apiÀÀ´ä¿¡ ÇÁ¸®ºä urlÀ» Æ÷ÇÔÇÏ¿© ¿äÃ»ÇÏ±â À§ÇØ ÇÁ¸®ºä ÆÄ¶ó¹ÌÅÍ Ãß°¡
+        string encodedQuery = HttpUtility.UrlEncode(query);// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ URLï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ÛµÇ¹Ç·ï¿½, Æ¯ï¿½ï¿½ï¿½ï¿½ï¿½Ú³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ôµï¿½ ï¿½ï¿½ì¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ URLï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½.
+                                                           // C#ï¿½ï¿½ System.Webï¿½ï¿½ ï¿½Ö´ï¿½ HttpUtility.UrlEncodeï¿½ï¿½ ï¿½ï¿½ï¿½. ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+                                                           //ï¿½ï¿½ï¿½Û±ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Î¿ï¿½ cc0ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Í¸ï¿½, apiï¿½ï¿½ï¿½ä¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ urlï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½Ã»ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
         string url =  $"https://freesound.org/apiv2/search/text/?query={encodedQuery}&filter=license:(\"Creative Commons 0\")&fields=id,name,previews,username";
 
-        var request = new HttpRequestMessage(HttpMethod.Get, url);// HttpRequestMessage °´Ã¼ »ý¼º ¹× ÀÎÁõ Çì´õ ¼³Á¤
+        var request = new HttpRequestMessage(HttpMethod.Get, url);// HttpRequestMessage ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         request.Headers.Add("Authorization", $"Token {apiKey}");
-        await FetchSoundData(request); // ÁÖ¾îÁø url·Î freesound µ¥ÀÌÅÍ¸¦ °Ë»öÇÏ´Â ¸Þ¼­µå. ÆäÀÌÁö ÀÌµ¿ ½Ã »ç¿ë
+        await FetchSoundData(request); // ï¿½Ö¾ï¿½ï¿½ï¿½ urlï¿½ï¿½ freesound ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½Ë»ï¿½ï¿½Ï´ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½
     }
 
-    private async Task FetchSoundData(HttpRequestMessage request) //ÁÖ¾îÁø URL·Î freesound µ¥ÀÌÅÍ¸¦ ºñµ¿±âÀûÀ¸·Î °¡Á®¿À´Â ¸Þ¼­µå.
+    private async Task FetchSoundData(HttpRequestMessage request) //ï¿½Ö¾ï¿½ï¿½ï¿½ URLï¿½ï¿½ freesound ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ñµ¿±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½.
     {
         try
-        {   isSearching = true;//°Ë»ö ½ÃÀÛ. HTTP ¿äÃ» ÀüÈÄ·Î ÁøÇà»óÅÂ¸¦ ¾÷µ¥ÀÌÆ®.
+        {   isSearching = true;//ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½. HTTP ï¿½ï¿½Ã» ï¿½ï¿½ï¿½Ä·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®.
             progress = 0.0f;
             progressMessage = "Sendig Request...";
 
-            HttpResponseMessage response = await client.SendAsync(request);//ºñµ¿±âÀûÀ¸·Î HTTP GET ¿äÃ»À» º¸³½ ÈÄ ÀÀ´äÀ» ¹Þ´Â´Ù. »ý¼ºÇÑ URLÀ» »ç¿ë.
+            HttpResponseMessage response = await client.SendAsync(request);//ï¿½ñµ¿±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ HTTP GET ï¿½ï¿½Ã»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ´Â´ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ URLï¿½ï¿½ ï¿½ï¿½ï¿½.
             progress = 0.5f;
             progressMessage = "Receiving data...";
 
-            if (response.IsSuccessStatusCode) // ¿äÃ»ÀÌ ¼º°øÇß´ÂÁö È®ÀÎ
+            if (response.IsSuccessStatusCode) // ï¿½ï¿½Ã»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
             {
-                string jsonResponse = await response.Content.ReadAsStringAsync();//ÀÀ´äÀÇ JSON ¹®ÀÚ¿­À» ÀÐ´Â´Ù.
+                string jsonResponse = await response.Content.ReadAsStringAsync();//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ JSON ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½Ð´Â´ï¿½.
                 progress = 0.8f;
                 progressMessage = "Parsing data...";
 
-                soundResults = ParseSoundResults(jsonResponse);//JSON ¹®ÀÚ¿­À» ÆÄ½ÌÇÏ¿© °Ë»ö °á°ú ¸®½ºÆ®¸¦ ¾÷µ¥ÀÌÆ®
+                soundResults = ParseSoundResults(jsonResponse);//JSON ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½Ä½ï¿½ï¿½Ï¿ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
                 progress = 1f;
                 progressMessage = "Complete!";
             }
@@ -181,29 +182,29 @@ public class SoundCheckEditor : EditorWindow
                 HandleApiError(response);
             }
         }
-        catch (HttpRequestException e)//¿äÃ» ½ÇÆÐ ½Ã
+        catch (HttpRequestException e)//ï¿½ï¿½Ã» ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
         {
             Debug.LogError($"Error fetching sound data: {e.Message}");
             EditorUtility.DisplayDialog("API Request Error", $"Error fetching sound data: {e.Message}", "OK");
         }
         finally
         {
-            isSearching = false; // °Ë»ö Á¾·á
+            isSearching = false; // ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½
             progress = 0f;
             progressMessage = "";
         }
     }
 
-    private async void SearchSoundWithUrl(string url)// ÁÖ¾îÁø URLÀ» »ç¿ëÇÏ¿© Freesound API¸¦ È£Ãâ. ÆäÀÌÁö ³Ñ±â±â ±â´ÉÀ» À§ÇØ »ç¿ë.
-    {   //SearchSound¸Þ¼­µå¿ÍÀÇ Â÷ÀÌ : SearchSoundWithUrlÀº ¿ÜºÎ¿¡¼­ Á¦°øµÇ´Â URL »ç¿ë. SearchSound´Â Á÷Á¢ URL»ý¼º.
+    private async void SearchSoundWithUrl(string url)// ï¿½Ö¾ï¿½ï¿½ï¿½ URLï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ Freesound APIï¿½ï¿½ È£ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ±ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½.
+    {   //SearchSoundï¿½Þ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ : SearchSoundWithUrlï¿½ï¿½ ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ URL ï¿½ï¿½ï¿½. SearchSoundï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ URLï¿½ï¿½ï¿½ï¿½.
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("Authorization", $"Token {apiKey}");
         await FetchSoundData(request);
     }
 
-    private List<SoundResult> ParseSoundResults(string json)//freesound API ÀÀ´äÀ» ÆÄ½ÌÇÏ¿© °Ë»ö °á°ú¸¦ ¹ÝÈ¯ÇÏ´Â ¸Þ¼­µå
+    private List<SoundResult> ParseSoundResults(string json)//freesound API ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ä½ï¿½ï¿½Ï¿ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Ï´ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½
     {
-        if (string.IsNullOrEmpty(json))//api ÀÀ´ä µ¥ÀÌÅÍ À¯È¿¼º °ËÁõ --> jsonÆÄ½Ì Àü¿¡ api ÀÀ´äÀÌ emptyÀÎ °æ¿ì¸¦ ¹æÁö
+        if (string.IsNullOrEmpty(json))//api ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¿ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ --> jsonï¿½Ä½ï¿½ ï¿½ï¿½ï¿½ï¿½ api ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ emptyï¿½ï¿½ ï¿½ï¿½ì¸¦ ï¿½ï¿½ï¿½ï¿½
         {
             Debug.LogError("API response is empty.");
             EditorUtility.DisplayDialog("API Error", "The API response is empty.", "OK");
@@ -211,20 +212,20 @@ public class SoundCheckEditor : EditorWindow
         }
         try
         {
-            //JSON ¹®ÀÚ¿­À» FreesoundSearchResult °´Ã¼·Î º¯È¯.
+            //JSON ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ FreesoundSearchResult ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½È¯.
             var searchResults = JsonConvert.DeserializeObject<FreesoundSearchResult>(json);
-            if (searchResults == null || searchResults.results == null || searchResults?.results == null)// °Ë»ö °á°ú°¡ ¾ø°Å³ª json ±¸Á¶°¡ À¯È¿ÇÏÁö ¾ÊÀ» °æ¿ì Ãâ·ÂµÇ´Â ¿¡·¯
+            if (searchResults == null || searchResults.results == null || searchResults?.results == null)// ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Å³ï¿½ json ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ÂµÇ´ï¿½ ï¿½ï¿½ï¿½ï¿½
             {
                 Debug.LogError("No search results found or invalid JSON structure.");
-                return new List<SoundResult>();//ºó ¸®½ºÆ®¸¦ ¹ÝÈ¯Åä·Ï ÇÑ´Ù.
+                return new List<SoundResult>();//ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½È¯ï¿½ï¿½ï¿½ ï¿½Ñ´ï¿½.
             }
-            //´ÙÀ½ÆäÀÌÁö¿Í ÀÌÀü ÆäÀÌÁöÀÇ URL ¼³Á¤
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ URL ï¿½ï¿½ï¿½ï¿½
             nextPageUrl = CleanUrl(searchResults.next);
             prevPageUrl = CleanUrl(searchResults.previous);
 
             List<SoundResult> results = new List<SoundResult>();
 
-            foreach (var sound in searchResults.results)// °Ë»ö °á°ú ¸®½ºÆ®¸¦ ¼øÈ¸ÇÏ¿©, SoundResult °´Ã¼·Î º¯È¯ ÈÄ ¸®½ºÆ®¿¡ Ãß°¡
+            foreach (var sound in searchResults.results)// ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½È¸ï¿½Ï¿ï¿½, SoundResult ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ß°ï¿½
             {
                 results.Add(new SoundResult
                 {
@@ -235,40 +236,40 @@ public class SoundCheckEditor : EditorWindow
                     previews = sound.previews
                 });
             }
-            return results;//º¯È¯µÈ °Ë»ö °á°ú ¸®½ºÆ® ¹ÝÈ¯
+            return results;//ï¿½ï¿½È¯ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½È¯
         }
-        catch(JsonException ex)//JSON ÆÄ½Ì µ¥ÀÌÅÍ°¡ À¯È¿ÇÏÁö ¾Ê°Å³ª ±¸Á¶°¡ ´Ù¸¦ °æ¿ìÀÇ ¿¹¿ÜÃ³¸®
+        catch(JsonException ex)//JSON ï¿½Ä½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í°ï¿½ ï¿½ï¿½È¿ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°Å³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã³ï¿½ï¿½
         {
             Debug.LogError($"JSON Parsing Error : {ex.Message}");
             EditorUtility.DisplayDialog("JSON Error", "Failed to parse the API response. Please Check the data format", "OK");
-            return new List<SoundResult>();// ºó ¸®½ºÆ®¸¦ ¹ÝÈ¯.
+            return new List<SoundResult>();// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½È¯.
         }
-        catch(Exception ex)//ÀÏ¹Ý ¿¹¿Ü¿¡ ´ëÇÑ Ã³¸®
+        catch(Exception ex)//ï¿½Ï¹ï¿½ ï¿½ï¿½ï¿½Ü¿ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         {
             Debug.LogError($"Unexepted Error : {ex.Message}");
             EditorUtility.DisplayDialog("Error", "An unexpected error ocurred while processing the data", "OK");
-            return new List<SoundResult>();//ºó ¸®½ºÆ®¸¦ ¹ÝÈ¯.
+            return new List<SoundResult>();//ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½È¯.
         }
 
     }
 
-    private void DrawSoundResults()// °Ë»ö°á°ú¸¦ º¸¿©ÁÖ´Â ¸Þ¼­µå
+    private void DrawSoundResults()// ï¿½Ë»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½
     {
-        int maxResultToShow = 10;//UI ÇÑ ÆäÀÌÁö¿¡ º¸¿©Áö´Â ÃÖ´ë »ç¿îµå °³¼ö
+        int maxResultToShow = 10;//UI ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         int resultToDisplay = Mathf.Min(soundResults.Count, maxResultToShow);
 
-        //½ºÅ©·Ñ °¡´ÉÇÑ ¿µ¿ªÀ» »ý¼º. ³ôÀÌ¸¦ °íÁ¤ÇÏ°í ºó °ø°£À» Ãß°¡ÇÏ¿© next,prev¹öÆ°ÀÌ °¡·ÁÁöÁö ¾Ê°Ô Á¶Ä¡
+        //ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ï¿ï¿½ next,prevï¿½ï¿½Æ°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½ ï¿½ï¿½Ä¡
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width), GUILayout.Height(300));
         for (int i = 0; i < resultToDisplay; i++)
         {
             GUILayout.Space(20);
-            GUILayout.Label(soundResults[i].name);// »ç¿îµå ÀÌ¸§À» 8°³±îÁö¸¸ Ç¥½Ã
+            GUILayout.Label(soundResults[i].name);// ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ 8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½
 
-            if(GUILayout.Button("Play Preview"))//°Ë»ö °á°ú UI¿¡ ¹Ì¸®µè±â ¹öÆ° Ãß°¡
+            if(GUILayout.Button("Play Preview"))//ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ UIï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ° ï¿½ß°ï¿½
             {
                 if (soundResults[i].previews != null)
                 {
-                    string previewUrl = soundResults[i].previews.preview_hq_mp3; // °íÇ°Áú MP3 »ç¿ë
+                    string previewUrl = soundResults[i].previews.preview_hq_mp3; // ï¿½ï¿½Ç°ï¿½ï¿½ MP3 ï¿½ï¿½ï¿½
                     PlayPreview(previewUrl);
                 }
                 else
@@ -277,35 +278,35 @@ public class SoundCheckEditor : EditorWindow
                     EditorUtility.DisplayDialog("Preview Error", "No preview URL found for this sound.", "OK");
                 }
             }
-            if (GUILayout.Button("Open in Browser"))//¹öÆ° Å¬¸¯ ½Ã »ç¿îµå ÆäÀÌÁö·Î ÀÌµ¿
+            if (GUILayout.Button("Open in Browser"))//ï¿½ï¿½Æ° Å¬ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
             {
-                // FreesoundÀÇ ¿Àµð¿À ÆäÀÌÁö URL Æ÷¸Ë: https://freesound.org/people/{username}/sounds/{id}/
+                // Freesoundï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ URL ï¿½ï¿½ï¿½ï¿½: https://freesound.org/people/{username}/sounds/{id}/
                  string url = $"https://freesound.org/people/{soundResults[i].username}/sounds/{soundResults[i].id}/";
-                Application.OpenURL(url);//urlÀ» À¥ ºê¶ó¿ìÀú¿¡¼­ ¿­ ¼ö ÀÖÀ½.
+                Application.OpenURL(url);//urlï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
             }
         }
         EditorGUILayout.EndScrollView();
     }
 
-    private void DrawPaginationButtons()//ÆäÀÌÁö ³Ñ±â±â ¹öÆ° Ãâ·Â ¸Þ¼­µå
+    private void DrawPaginationButtons()//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ±ï¿½ï¿½ ï¿½ï¿½Æ° ï¿½ï¿½ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½
     {
-            //ºó °ø°£ Ãß°¡ : °Ë»ö °á°ú¿Í ÆäÀÌÁö ³Ñ±â±â ¹öÆ°»çÀÌ¿¡ ¿©À¯ °ø°£ È®º¸
-            GUILayout.Space(20);//¹öÆ°°ú °Ë»ö °á°ú »çÀÌ¿¡ 20ÇÈ¼¿ÀÇ ¿©¹é Ãß°¡
+            //ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ : ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ±ï¿½ï¿½ ï¿½ï¿½Æ°ï¿½ï¿½ï¿½Ì¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
+            GUILayout.Space(20);//ï¿½ï¿½Æ°ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¿ï¿½ 20ï¿½È¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 
-            //ÆäÀÌÁö ³Ñ±â±â ¹öÆ°
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ±ï¿½ï¿½ ï¿½ï¿½Æ°
             EditorGUILayout.BeginHorizontal();
             {
-                // ÀÌÀü ÆäÀÌÁö ¹öÆ°: prevPageUrlÀÌ nullÀÌ¸é ºñÈ°¼ºÈ­
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ°: prevPageUrlï¿½ï¿½ nullï¿½Ì¸ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­
                 EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(prevPageUrl));
-                if (GUILayout.Button("< Previous Page", GUILayout.Height(30))) // ¹öÆ° Å©±â ¼öÁ¤
+                if (GUILayout.Button("< Previous Page", GUILayout.Height(30))) // ï¿½ï¿½Æ° Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     SearchSoundWithUrl(prevPageUrl);
                 }
                 EditorGUI.EndDisabledGroup();
 
-                // ´ÙÀ½ ÆäÀÌÁö ¹öÆ°: nextPageUrlÀÌ nullÀÌ¸é ºñÈ°¼ºÈ­
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ°: nextPageUrlï¿½ï¿½ nullï¿½Ì¸ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­
                 EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(nextPageUrl));
-                if (GUILayout.Button("Next Page >", GUILayout.Height(30))) // ¹öÆ° Å©±â ¼öÁ¤
+                if (GUILayout.Button("Next Page >", GUILayout.Height(30))) // ï¿½ï¿½Æ° Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     SearchSoundWithUrl(nextPageUrl);
                 }
@@ -314,13 +315,13 @@ public class SoundCheckEditor : EditorWindow
             EditorGUILayout.EndHorizontal();
     }
 
-    private string CleanUrl(string url)// next, prev ÆäÀÌÁö url Æ÷¸Ë Áß ÇÊ¿ä¾ø´Â ºÎºÐÀ» Á¦°Å
+    private string CleanUrl(string url)// next, prev ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ url ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     {
         if (string.IsNullOrEmpty(url)) return url;
         return url.Replace("&weights=", "");
     }
 
-    private void DrawApiKeyField() //»ç¿ëÀÚ°¡ ¿¡µðÅÍ Ã¢¿¡¼­ Á÷Á¢ º»ÀÎÀÇ APIÅ°¸¦ ÀÔ·ÂÇÏ°í ÀúÀåÇÒ ¼ö ÀÖµµ·Ï ¼³Á¤
+    private void DrawApiKeyField() //ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¢ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ APIÅ°ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Öµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     {   
         GUILayout.Label("Freesound API Key", EditorStyles.boldLabel);
         string newApiKey = EditorGUILayout.TextField("API Key", apiKey);
@@ -329,21 +330,21 @@ public class SoundCheckEditor : EditorWindow
             apiKey = newApiKey;
         }
 
-        if (GUILayout.Button("Save API Key"))//¼¼ÀÌºê ¹öÆ° Å¬¸¯ ½Ã apikey¸¦ EditorPrefs¿¡ ÀúÀå
+        if (GUILayout.Button("Save API Key"))//ï¿½ï¿½ï¿½Ìºï¿½ ï¿½ï¿½Æ° Å¬ï¿½ï¿½ ï¿½ï¿½ apikeyï¿½ï¿½ EditorPrefsï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         {
             EditorPrefs.SetString("FreesoundAPIKey", apiKey);
             EditorUtility.DisplayDialog("API Key Saved", "Your API Key has been saved successfully.", "OK");
         }
     }
 
-    private void HandleApiError(HttpResponseMessage response)//apiÅ° ¿¡·¯ ÇÚµé¸µÀ» À§ÇÑ ¸Þ¼­µå
+    private void HandleApiError(HttpResponseMessage response)//apiÅ° ï¿½ï¿½ï¿½ï¿½ ï¿½Úµé¸µï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½
     {
         string errorMessage = $"API Error : {response.ReasonPhrase}";
-        if(response.StatusCode==System.Net.HttpStatusCode.Unauthorized)//ÀÎÁõ¿À·ù ½Ã
+        if(response.StatusCode==System.Net.HttpStatusCode.Unauthorized)//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
         {
             errorMessage = "Unauthorized: Your API Key might be invalid or expired.";
         }
-        else if(response.StatusCode == System.Net.HttpStatusCode.Forbidden)//Àß¸øµÈ Á¢±Ù ½Ã
+        else if(response.StatusCode == System.Net.HttpStatusCode.Forbidden)//ï¿½ß¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
         {
             errorMessage = "Forbidden: You do not have permission to access this resource.";
         }
@@ -351,24 +352,24 @@ public class SoundCheckEditor : EditorWindow
         EditorUtility.DisplayDialog("API Error", errorMessage, "OK");
     }
 
-    private async void PlayPreview(string previewUrl)//¸ñ·Ï¿¡ Ãâ·ÂµÈ »ç¿îµå ¸®¼Ò½ºÀÇ ¹Ì¸®µè±â ±â´ÉÀ» ±¸ÇöÇÏ´Â ¸Þ¼­µå.
+    private async void PlayPreview(string previewUrl)//ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½Âµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½.
     {
         CheckApiKeyVaildation();
         CheckUrlValidation(previewUrl);
         try
         {
-            if(audioSource.isPlaying)//Àç»ý Àü¿¡ ÇöÀç ¿Àµð¿À ÁßÁö.
+            if(audioSource.isPlaying)//ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
             {
                 StopPreview();
             }
             using(UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(previewUrl, audioType:AudioType.MPEG))
             {
-                www.SetRequestHeader("Authorization", $"Token {apiKey}");//apiÅ°¸¦ Çì´õ¿¡ Ãß°¡. freesound´Â ¹Ì¸®µè±âµµ apikey¸¦ ¿ä±¸ÇÏ¹Ç·Î.
+                www.SetRequestHeader("Authorization", $"Token {apiKey}");//apiÅ°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½. freesoundï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½âµµ apikeyï¿½ï¿½ ï¿½ä±¸ï¿½Ï¹Ç·ï¿½.
 
                 var operation = www.SendWebRequest();
                 while(!operation.isDone)
                 {
-                    await Task.Yield();//ºñµ¿±â ´ë±â.
+                    await Task.Yield();//ï¿½ñµ¿±ï¿½ ï¿½ï¿½ï¿½.
                 }
 
                 if(www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
@@ -382,7 +383,7 @@ public class SoundCheckEditor : EditorWindow
 
                     if(currentAudioClip != null)
                     {
-                        if(audioSource.isPlaying)//ÇöÀç Àç»ýÁßÀÌ¸é ½ºÅé.
+                        if(audioSource.isPlaying)//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½.
                         {
                             audioSource.Stop();
                         }
@@ -399,7 +400,7 @@ public class SoundCheckEditor : EditorWindow
         }
     }
 
-    private void CheckApiKeyVaildation()//API Å° À¯È¿¼º °Ë»ç ¸Þ¼­µå.
+    private void CheckApiKeyVaildation()//API Å° ï¿½ï¿½È¿ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½.
     {
         if(string.IsNullOrEmpty(apiKey))
         {
@@ -407,9 +408,9 @@ public class SoundCheckEditor : EditorWindow
             return;
         }
     }
-    private void CheckUrlValidation(string url)//url À¯È¿¼º °Ë»ç ¸Þ¼­µå.
+    private void CheckUrlValidation(string url)//url ï¿½ï¿½È¿ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½.
     {
-        if(string.IsNullOrEmpty(url))//urlÀÌ nullÀÌ°Å³ª ºñ¾îÀÖÀ» °æ¿ì
+        if(string.IsNullOrEmpty(url))//urlï¿½ï¿½ nullï¿½Ì°Å³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         {
             Debug.LogError($"{url} is empty.");
             return;
